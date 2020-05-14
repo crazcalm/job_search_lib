@@ -1,4 +1,4 @@
-use rusqlite::{Error, params, Connection};
+use rusqlite::{params, Connection, Error};
 
 #[derive(Debug)]
 struct AppliedTo {
@@ -19,14 +19,6 @@ struct Company {
     website: Option<String>,
     phone: Option<String>,
     created_date: String,
-    last_updated: Option<String>,
-    hide: i32,
-}
-
-#[derive(Debug)]
-struct ContactTypes {
-    id: Option<i32>,
-    name: String,
     last_updated: Option<String>,
     hide: i32,
 }
@@ -78,13 +70,13 @@ pub struct JobPosting {
 
 impl JobPosting {
     pub fn new(link: String) -> JobPosting {
-        JobPosting{
+        JobPosting {
             id: None,
-            link: link,
+            link,
             created_date: None,
             last_updated: None,
             description: None,
-            hide: 0
+            hide: 0,
         }
     }
 
@@ -124,23 +116,25 @@ impl JobPosting {
     pub fn add_to_db(self, conn: &Connection) -> Result<i32, Error> {
         //If it has an id, do not add it to the database
         // because it already exists
-        let mut result= 0;
-         match self.id {
-            Some(id) => {
+        let mut result = 0;
+        match self.id {
+            Some(_id) => {
                 //Could add logging
                 // Do nothing
-            },
+            }
             None => {
-                let mut stmt = conn
-            .prepare(
-                "INSERT INTO job_postings\
+                let mut stmt = conn.prepare(
+                    "INSERT INTO job_postings\
                  (link, last_updated, description, hide) \
-                 VALUES (?1, ?2, ?3, ?4);"
-            )?;
-
-                result = stmt.insert(
-                    params![self.link, self.last_updated, self.description, self.hide]
+                 VALUES (?1, ?2, ?3, ?4);",
                 )?;
+
+                result = stmt.insert(params![
+                    self.link,
+                    self.last_updated,
+                    self.description,
+                    self.hide
+                ])?;
             }
         }
 
@@ -156,14 +150,20 @@ mod tests {
     use rusqlite::Connection;
 
     fn create_job_posting_test_data(conn: &Connection) {
-        JobPosting::new(String::from("google")).add_to_db(conn).unwrap();
-        JobPosting::new(String::from("amazon")).add_to_db(conn).unwrap();
-        JobPosting::new(String::from("mozilla")).add_to_db(conn).unwrap();
+        JobPosting::new(String::from("google"))
+            .add_to_db(conn)
+            .unwrap();
+        JobPosting::new(String::from("amazon"))
+            .add_to_db(conn)
+            .unwrap();
+        JobPosting::new(String::from("mozilla"))
+            .add_to_db(conn)
+            .unwrap();
     }
 
     #[test]
     fn test_get_all_job_postings() {
-        let conn = create_in_memory_db();
+        let conn = create_in_memory_db().unwrap();
 
         create_job_posting_test_data(&conn);
 

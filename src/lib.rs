@@ -2,19 +2,23 @@ use std::fs;
 use std::path;
 
 use rusqlite::config::DbConfig;
-use rusqlite::{params, Connection, NO_PARAMS};
+use rusqlite::{params, Connection, Error};
+mod contact_type;
 mod models;
 mod utils;
 
-fn enable_foreign_key_check(conn: Connection) -> Connection {
-    if !conn
-        .db_config(DbConfig::SQLITE_DBCONFIG_ENABLE_FKEY)
-        .unwrap()
-    {
-        let _ = conn.set_db_config(DbConfig::SQLITE_DBCONFIG_ENABLE_FKEY, true);
-    }
+fn enable_config_options(conn: &Connection) -> Result<(), Error> {
+    let db_options = vec![
+        DbConfig::SQLITE_DBCONFIG_ENABLE_FKEY,
+        DbConfig::SQLITE_DBCONFIG_ENABLE_TRIGGER,
+    ];
 
-    conn
+    for option in db_options {
+        if !conn.db_config(option).unwrap() {
+            let _ = conn.set_db_config(DbConfig::SQLITE_DBCONFIG_ENABLE_FKEY, true)?;
+        }
+    }
+    Ok(())
 }
 
 fn get_path_to_sql_init_file() -> String {
@@ -62,19 +66,21 @@ fn file_exist(path: &str) -> bool {
     result
 }
 
-fn create_in_memory_db() -> Connection {
-    let conn = Connection::open_in_memory().unwrap();
+fn create_in_memory_db() -> Result<Connection, Error> {
+    let conn = Connection::open_in_memory()?;
     let sql_stmts = read_sql_file("");
     let _ = conn.execute_batch(sql_stmts.as_str());
 
-    enable_foreign_key_check(conn)
+    let _ = enable_config_options(&conn)?;
+
+    Ok(conn)
 }
 
-pub fn get_db_connection(path: &str) -> Connection {
+pub fn get_db_connection(path: &str) -> Result<Connection, Error> {
     let conn = if file_exist(path) {
-        Connection::open(path).unwrap()
+        Connection::open(path)?
     } else {
-        let _conn = Connection::open(path).unwrap();
+        let _conn = Connection::open(path)?;
 
         // Get the sql needed to create the database
         let sql_stmts = read_sql_file("");
@@ -83,23 +89,23 @@ pub fn get_db_connection(path: &str) -> Connection {
         _conn
     };
 
-    let conn = enable_foreign_key_check(conn);
+    let _ = enable_config_options(&conn);
 
-    conn
+    Ok(conn)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::fs;
 
-    use models;
+    use super::*;
 
     #[test]
     fn test_get_database_connection_with_existing_db() {
         let path_to_db =
             vec!["experimental", "test.db"].join(path::MAIN_SEPARATOR.to_string().as_str());
 
-        let conn = get_db_connection(&path_to_db);
+        let conn = get_db_connection(&path_to_db).unwrap();
         let mut stmt = conn
             .prepare("SELECT name FROM contacts where id=?;")
             .unwrap();
@@ -108,14 +114,14 @@ mod tests {
 
         while let Some(row) = rows.next().unwrap() {
             let name: String = row.get(0).unwrap();
-            assert_eq!(name, "No Name");
+            assert_eq!(name, "Marcus");
         }
     }
 
     #[test]
-    fn test_enable_foreign_key_check() {
-        let conn = get_db_connection("");
-        let conn = enable_foreign_key_check(conn);
+    fn test_enable_config_options() {
+        let conn = get_db_connection("").unwrap();
+        let _ = enable_config_options(&conn).unwrap();
 
         assert_eq!(
             conn.db_config(DbConfig::SQLITE_DBCONFIG_ENABLE_FKEY)
@@ -126,15 +132,16 @@ mod tests {
 
     #[test]
     fn test_get_database_connection_with_new_db() {
-        let conn = get_db_connection("");
+        let file_name = "new_test_db.db";
 
-        let mut stmt = conn
-            .prepare("SELECT name FROM contacts where id=?;")
-            .unwrap();
+        let conn = get_db_connection(file_name).unwrap();
 
-        let row = stmt.query_row(params![1], |row| row.get(0));
-        let name: String = row.unwrap();
-        assert_eq!(name, "Marcus");
+        let mut stmt = conn.prepare("SELECT name FROM contacts;").unwrap();
+
+        let _rows = stmt.query(params![]).unwrap();
+
+        // Cleaning up the created file
+        fs::remove_file(file_name).unwrap()
     }
 
     #[test]
