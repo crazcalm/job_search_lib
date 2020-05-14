@@ -1,0 +1,10 @@
+BEGIN TRANSACTION;
+DROP TABLE IF EXISTS "companies";
+CREATE TABLE IF NOT EXISTS "companies" (
+	"id"	INTEGER PRIMARY KEY AUTOINCREMENT,
+	"name"	TEXT NOT NULL UNIQUE,
+	"address"	TEXT,
+	"website"	TEXT,
+	"phone"	TEXT
+);
+COMMIT;
