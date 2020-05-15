@@ -1,10 +1,15 @@
 use rusqlite::{params, Connection, Error};
+use chrono::{DateTime, Local};
+use chrono::prelude::*;
+
+use crate::utils::{parse_time, convert_option_string_to_option_date};
+
 
 #[derive(Debug)]
 pub struct ContactType {
     id: Option<i32>,
     pub name: String,
-    last_updated: Option<String>,
+    last_updated: Option<DateTime<Local>>,
     pub hide: bool,
 }
 
@@ -18,7 +23,7 @@ impl ContactType {
         }
     }
 
-    fn new_from_db(id: i32, name: String, last_updated: Option<String>, hide: i32) -> ContactType {
+    fn new_from_db(id: i32, name: String, last_updated: Option<DateTime<Local>>, hide: i32) -> ContactType {
         let hide = match hide {
             0 => false,
             _ => true,
@@ -43,6 +48,7 @@ impl ContactType {
                     Some(time) => Some(time),
                     None => None,
                 };
+                let last_updated = convert_option_string_to_option_date(last_updated);
                 let hide: i32 = row.get(3)?;
 
                 Ok(ContactType::new_from_db(id, name, last_updated, hide))
@@ -70,6 +76,7 @@ impl ContactType {
                 Some(time) => Some(time),
                 None => None,
             };
+            let last_updated = convert_option_string_to_option_date(last_updated);
             let hide = match row.get(2)? {
                 0 => false,
                 _ => true,
@@ -106,6 +113,7 @@ impl ContactType {
                     Some(time) => Some(time),
                     None => None,
                 };
+                let last_updated = convert_option_string_to_option_date(last_updated);
 
                 Ok(last_updated)
             },
@@ -141,7 +149,7 @@ mod tests {
     fn test_new_from_db() {
         let id: i32 = 5;
         let name = "testing".to_string();
-        let last_updated = "some time".to_string();
+        let last_updated = Local::now();
         let hide = 1; //everything other than 0 is true
 
         let contact_type =
