@@ -2,8 +2,8 @@ use rusqlite::{params, Connection, Error};
 use chrono::{DateTime, Local};
 use chrono::prelude::*;
 
-use crate::utils::{parse_time, convert_option_string_to_option_date};
-
+use crate::utils::{convert_option_string_to_option_date};
+use crate::errors::JobSearchError;
 
 #[derive(Debug)]
 pub struct ContactType {
@@ -37,7 +37,7 @@ impl ContactType {
         }
     }
 
-    fn get_by_id(conn: &Connection, id: i32) -> Result<ContactType, Error> {
+    fn get_by_id(conn: &Connection, id: i32) -> Result<ContactType, JobSearchError> {
         let contact_type = conn.query_row(
             "SELECT id, name, last_updated, hide FROM contact_types WHERE id = (?1)",
             params![id],
@@ -55,10 +55,10 @@ impl ContactType {
             },
         );
 
-        contact_type
+        Ok(contact_type?)
     }
 
-    fn add_to_db(&mut self, conn: &Connection) -> Result<(), Error> {
+    fn add_to_db(&mut self, conn: &Connection) -> Result<(), JobSearchError> {
         let _ = conn.execute(
             "INSERT INTO contact_types (name) VALUES (?1)",
             params![self.name],
@@ -93,7 +93,7 @@ impl ContactType {
         Ok(())
     }
 
-    fn update_db(&mut self, conn: &Connection) -> Result<(), Error> {
+    fn update_db(&mut self, conn: &Connection) -> Result<(), JobSearchError> {
         let hide = match self.hide {
             true => 1,
             false => 0,
@@ -122,6 +122,40 @@ impl ContactType {
         self.last_updated = last_updated;
 
         Ok(())
+    }
+
+    pub fn new_from_row(row: &rusqlite::Row) -> Result<ContactType, JobSearchError> {
+        //add error handling
+
+        let result = ContactType {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            last_updated: row.get(2)?,
+            hide: match row.get(3)? {
+                0 => false,
+                _ => true,
+            },
+        };
+
+        Ok(result)
+    }
+
+    fn get_all(conn: &Connection) -> Result<Vec<ContactType>, JobSearchError> {
+        let mut stmt = conn
+            .prepare(
+                "SELECT id, name, last_updated, hide FROM contact_types",
+            )?;
+
+        let contact_types_iter = stmt
+            .query_map(params![], |row| Ok(ContactType::new_from_row(row).unwrap()))?;
+
+        let mut contact_types = Vec::new();
+
+        for types in contact_types_iter {
+            contact_types.push(types?);
+        }
+
+        Ok(contact_types)
     }
 }
 
@@ -195,8 +229,28 @@ mod tests {
 
         let _ = contact_type.update_db(&conn).unwrap();
 
-        println!("{:?}", contact_type);
-
         assert_ne!(contact_type.last_updated, None);
+    }
+
+    #[test]
+    fn test_get_all_when_none(){
+        let conn = create_in_memory_db().unwrap();
+
+        let items = ContactType::get_all(&conn).unwrap();
+
+        assert_eq!(items.is_empty(), true);
+    }
+
+    #[test]
+    fn test_get_all(){
+        let mut contact_type = ContactType::new("testing".to_string());
+
+        let conn = create_in_memory_db().unwrap();
+
+        let _ = contact_type.add_to_db(&conn).unwrap();
+
+        let all_contact_types = ContactType::get_all(&conn).unwrap();
+
+        assert_eq!(all_contact_types.is_empty(), false);
     }
 }

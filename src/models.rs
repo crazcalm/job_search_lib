@@ -36,13 +36,7 @@ struct Contacts {
     hide: i32,
 }
 
-#[derive(Debug)]
-struct InterviewTypes {
-    id: Option<i32>,
-    name: String,
-    last_updated: Option<String>,
-    hide: i32,
-}
+
 
 #[derive(Debug)]
 struct Interviews {

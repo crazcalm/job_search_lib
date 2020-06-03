@@ -6,6 +6,8 @@ use rusqlite::{params, Connection, Error};
 mod contact_type;
 mod models;
 mod utils;
+mod errors;
+mod interview_type;
 
 fn enable_config_options(conn: &Connection) -> Result<(), Error> {
     let db_options = vec![
