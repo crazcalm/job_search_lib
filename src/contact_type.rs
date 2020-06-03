@@ -1,9 +1,9 @@
-use rusqlite::{params, Connection, Error};
-use chrono::{DateTime, Local};
 use chrono::prelude::*;
+use chrono::{DateTime, Local};
+use rusqlite::{params, Connection, Error};
 
-use crate::utils::{convert_option_string_to_option_date};
 use crate::errors::JobSearchError;
+use crate::utils::convert_option_string_to_option_date;
 
 #[derive(Debug)]
 pub struct ContactType {
@@ -23,7 +23,12 @@ impl ContactType {
         }
     }
 
-    fn new_from_db(id: i32, name: String, last_updated: Option<DateTime<Local>>, hide: i32) -> ContactType {
+    fn new_from_db(
+        id: i32,
+        name: String,
+        last_updated: Option<DateTime<Local>>,
+        hide: i32,
+    ) -> ContactType {
         let hide = match hide {
             0 => false,
             _ => true,
@@ -141,13 +146,10 @@ impl ContactType {
     }
 
     fn get_all(conn: &Connection) -> Result<Vec<ContactType>, JobSearchError> {
-        let mut stmt = conn
-            .prepare(
-                "SELECT id, name, last_updated, hide FROM contact_types",
-            )?;
+        let mut stmt = conn.prepare("SELECT id, name, last_updated, hide FROM contact_types")?;
 
-        let contact_types_iter = stmt
-            .query_map(params![], |row| Ok(ContactType::new_from_row(row).unwrap()))?;
+        let contact_types_iter =
+            stmt.query_map(params![], |row| Ok(ContactType::new_from_row(row).unwrap()))?;
 
         let mut contact_types = Vec::new();
 
@@ -233,7 +235,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_all_when_none(){
+    fn test_get_all_when_none() {
         let conn = create_in_memory_db().unwrap();
 
         let items = ContactType::get_all(&conn).unwrap();
@@ -242,7 +244,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_all(){
+    fn test_get_all() {
         let mut contact_type = ContactType::new("testing".to_string());
 
         let conn = create_in_memory_db().unwrap();

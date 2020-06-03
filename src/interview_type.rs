@@ -1,9 +1,9 @@
-use rusqlite::{params, Connection, Error};
-use chrono::{DateTime, Local};
 use chrono::prelude::*;
+use chrono::{DateTime, Local};
+use rusqlite::{params, Connection, Error};
 
-use crate::utils::{convert_option_string_to_option_date};
 use crate::errors::JobSearchError;
+use crate::utils::convert_option_string_to_option_date;
 
 #[derive(Debug)]
 struct InterviewType {
@@ -14,18 +14,21 @@ struct InterviewType {
 }
 
 impl InterviewType {
-
-    fn new(name: String) -> InterviewType{
-
-        InterviewType{
+    fn new(name: String) -> InterviewType {
+        InterviewType {
             id: None,
             name,
             last_updated: None,
-            hide: false
+            hide: false,
         }
     }
 
-    fn new_from_db(id: i32, name: String, last_updated: Option<DateTime<Local>>, hide: i32) -> InterviewType {
+    fn new_from_db(
+        id: i32,
+        name: String,
+        last_updated: Option<DateTime<Local>>,
+        hide: i32,
+    ) -> InterviewType {
         let hide = match hide {
             0 => false,
             _ => true,
@@ -93,14 +96,39 @@ impl InterviewType {
         self.hide = row.2;
 
         Ok(())
-
     }
 
-    fn update_db(){
+    fn update_db(&mut self, conn: &Connection) -> Result<(), JobSearchError> {
+        let hide = match self.hide {
+            true => 1,
+            false => 0,
+        };
 
+        let _ = conn.execute(
+            "UPDATE interview_types SET name = (?1), hide = (?2) WHERE id = (?3)",
+            params![self.name, hide, self.id],
+        )?;
+
+        //need to update the last_updated field
+        let last_updated = conn.query_row(
+            "SELECT last_updated FROM interview_types WHERE id = (?1)",
+            params![self.id],
+            |row| {
+                let last_updated: Option<String> = match row.get(0)? {
+                    Some(time) => Some(time),
+                    None => None,
+                };
+                let last_updated = convert_option_string_to_option_date(last_updated);
+
+                Ok(last_updated)
+            },
+        )?;
+
+        self.last_updated = last_updated;
+
+        Ok(())
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -109,7 +137,7 @@ mod tests {
     use chrono::prelude::*;
 
     #[test]
-    fn test_new(){
+    fn test_new() {
         let name = "testing".to_string();
 
         let interview_type = InterviewType::new(name.clone());
@@ -118,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_by_id(){
+    fn test_get_by_id() {
         let conn = create_in_memory_db().unwrap();
 
         let name = "testing".to_string();
@@ -129,7 +157,28 @@ mod tests {
     }
 
     #[test]
-    fn test_add_to_db(){
+    fn test_update_db() {
+        let conn = create_in_memory_db().unwrap();
+
+        let mut name = "testing".to_string();
+        let mut interview_type = InterviewType::new(name.clone());
+
+        let _ = interview_type.add_to_db(&conn).unwrap();
+
+        let last_updated = interview_type.last_updated.clone();
+
+        name = "new_name".to_string();
+        interview_type.name = name.clone();
+
+        let _ = interview_type.update_db(&conn).unwrap();
+
+        //Inserting an item in the DB does not populate the last_updated
+        //field. As such the `last_updated` variable is None.
+        assert_ne!(interview_type.last_updated, last_updated);
+    }
+
+    #[test]
+    fn test_add_to_db() {
         let conn = create_in_memory_db().unwrap();
 
         let name = "testing".to_string();

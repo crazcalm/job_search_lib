@@ -14,5 +14,7 @@ impl From<rusqlite::Error> for JobSearchError {
 }
 
 impl From<rusqlite::types::FromSqlError> for JobSearchError {
-    fn from(error: rusqlite::types::FromSqlError) -> JobSearchError { JobSearchError::SQLError(error) }
+    fn from(error: rusqlite::types::FromSqlError) -> JobSearchError {
+        JobSearchError::SQLError(error)
+    }
 }
