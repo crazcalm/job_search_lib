@@ -12,18 +12,6 @@ struct AppliedTo {
 }
 
 #[derive(Debug)]
-struct Company {
-    id: Option<i32>,
-    name: String,
-    address: Option<String>,
-    website: Option<String>,
-    phone: Option<String>,
-    created_date: String,
-    last_updated: Option<String>,
-    hide: i32,
-}
-
-#[derive(Debug)]
 struct Contacts {
     id: Option<i32>,
     name: String,

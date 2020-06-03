@@ -3,6 +3,7 @@ use std::path;
 
 use rusqlite::config::DbConfig;
 use rusqlite::{params, Connection, Error};
+mod company;
 mod contact_type;
 mod errors;
 mod interview_type;
