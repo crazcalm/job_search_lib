@@ -102,7 +102,7 @@ impl JobPosting {
         };
 
         let _ = conn.execute(
-            "UPDATE job_posting SET link = (?1), description = (?2), hide = (?3) WHERE id = (?3)",
+            "UPDATE job_postings SET link = (?1), description = (?2), hide = (?3) WHERE id = (?4)",
             params![self.link, self.description, hide, self.id],
         )?;
 
@@ -170,7 +170,7 @@ mod tests {
         let description = "Testing this out".to_string();
         job_posting.description = Some(description);
 
-        job_posting.update_db(&conn);
+        job_posting.update_db(&conn).unwrap();
 
         assert_ne!(job_posting.last_updated, None);
         assert_ne!(job_posting.description, None);
