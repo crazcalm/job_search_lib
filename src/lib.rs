@@ -57,13 +57,7 @@ fn file_exist(path: &str) -> bool {
     };
 
     let result = match metadata {
-        Some(data) => {
-            if data.is_file() {
-                true
-            } else {
-                false
-            }
-        }
+        Some(data) => data.is_file(),
         None => false,
     };
 
@@ -76,7 +70,7 @@ fn create_in_memory_db() -> Result<Connection, Error> {
     let sql_stmts = read_sql_file("");
     let _ = conn.execute_batch(sql_stmts.as_str());
 
-    let _ = enable_config_options(&conn)?;
+    enable_config_options(&conn)?;
 
     Ok(conn)
 }

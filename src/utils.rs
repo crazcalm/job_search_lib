@@ -23,14 +23,14 @@ pub fn convert_option_string_to_option_date(
 fn parse_time(date: &str) -> Result<DateTime<Local>, std::num::ParseIntError> {
     //"2020-05-14 21:16:39"
 
-    let date_time_parts: Vec<&str> = date.split(" ").collect();
+    let date_time_parts: Vec<&str> = date.split(' ').collect();
     let date_parts: Vec<u32> = date_time_parts[0]
-        .split("-")
+        .split('-')
         .map(|part| part.parse::<u32>().unwrap())
         .collect();
 
     let time_parts: Vec<u32> = date_time_parts[1]
-        .split(":")
+        .split(':')
         .map(|part| part.parse::<u32>().unwrap())
         .collect();
 
@@ -52,13 +52,7 @@ fn file_exist(path: &str) -> bool {
     };
 
     let result = match metadata {
-        Some(data) => {
-            if data.is_file() {
-                true
-            } else {
-                false
-            }
-        }
+        Some(data) => data.is_file(),
         None => false,
     };
 

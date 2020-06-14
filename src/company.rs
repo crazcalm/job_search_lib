@@ -86,10 +86,7 @@ impl Company {
     }
 
     fn add_to_db(&mut self, conn: &Connection) -> Result<(), JobSearchError> {
-        let hide = match self.hide {
-            true => 1,
-            false => 0,
-        };
+        let hide = if self.hide { 1 } else { 0 };
 
         let _ = conn.execute(
             "INSERT INTO companies (name, address, website, phone, hide) VALUES (?1, ?2, ?3, ?4, ?5)",

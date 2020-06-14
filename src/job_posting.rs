@@ -100,10 +100,7 @@ impl JobPosting {
 
     #[allow(dead_code)]
     fn update_db(&mut self, conn: &Connection) -> Result<(), JobSearchError> {
-        let hide = match self.hide {
-            true => 1,
-            false => 0,
-        };
+        let hide = if self.hide { 1 } else { 0 };
 
         let _ = conn.execute(
             "UPDATE job_postings SET link = (?1), description = (?2), hide = (?3) WHERE id = (?4)",

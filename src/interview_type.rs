@@ -99,10 +99,7 @@ impl InterviewType {
     }
 
     fn update_db(&mut self, conn: &Connection) -> Result<(), JobSearchError> {
-        let hide = match self.hide {
-            true => 1,
-            false => 0,
-        };
+        let hide = if self.hide { 1 } else { 0 };
 
         let _ = conn.execute(
             "UPDATE interview_types SET name = (?1), hide = (?2) WHERE id = (?3)",
