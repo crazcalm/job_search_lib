@@ -35,7 +35,6 @@ impl Company {
             hide: false,
         }
     }
-
     fn new_from_db(
         id: Option<i32>,
         name: String,

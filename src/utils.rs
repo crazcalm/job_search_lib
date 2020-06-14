@@ -6,7 +6,7 @@ use std::fs;
 pub fn convert_option_string_to_option_date(
     string_time: Option<String>,
 ) -> Option<DateTime<Local>> {
-    let date_option = match string_time {
+    match string_time {
         Some(time) => match parse_time(time.as_str()) {
             Ok(date) => Some(date),
             Err(_err) => {
@@ -15,8 +15,7 @@ pub fn convert_option_string_to_option_date(
             }
         },
         None => None,
-    };
-    date_option
+    }
 }
 
 #[allow(dead_code)]
@@ -51,12 +50,10 @@ fn file_exist(path: &str) -> bool {
         None
     };
 
-    let result = match metadata {
+    match metadata {
         Some(data) => data.is_file(),
         None => false,
-    };
-
-    result
+    }
 }
 
 #[cfg(test)]

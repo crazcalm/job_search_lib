@@ -1,4 +1,3 @@
-use rusqlite;
 use std::fmt::Debug;
 
 #[derive(Debug)]

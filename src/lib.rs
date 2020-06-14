@@ -35,18 +35,13 @@ fn read_sql_file(path: &str) -> String {
     // If path is an empty string, I want to use a default path
     let sql_file_path = if path.is_empty() {
         sql_init_file_path
+    } else if file_exist(path) {
+        path.to_string()
     } else {
-        let _path = if file_exist(path) {
-            path.to_string()
-        } else {
-            sql_init_file_path
-        };
-
-        _path
+        sql_init_file_path
     };
 
-    let sql_file_string = fs::read_to_string(&sql_file_path).unwrap();
-    sql_file_string
+    fs::read_to_string(&sql_file_path).unwrap()
 }
 
 fn file_exist(path: &str) -> bool {
@@ -56,12 +51,10 @@ fn file_exist(path: &str) -> bool {
         None
     };
 
-    let result = match metadata {
+    match metadata {
         Some(data) => data.is_file(),
         None => false,
-    };
-
-    result
+    }
 }
 
 #[allow(dead_code)]
