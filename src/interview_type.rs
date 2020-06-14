@@ -1,6 +1,5 @@
-use chrono::prelude::*;
 use chrono::{DateTime, Local};
-use rusqlite::{params, Connection, Error};
+use rusqlite::{params, Connection};
 
 use crate::errors::JobSearchError;
 use crate::utils::convert_option_string_to_option_date;
@@ -13,6 +12,7 @@ struct InterviewType {
     hide: bool,
 }
 
+#[allow(dead_code)]
 impl InterviewType {
     fn new(name: String) -> InterviewType {
         InterviewType {
@@ -134,7 +134,6 @@ impl InterviewType {
 mod tests {
     use super::*;
     use crate::create_in_memory_db;
-    use chrono::prelude::*;
 
     #[test]
     fn test_new() {
@@ -151,9 +150,11 @@ mod tests {
 
         let name = "testing".to_string();
         let mut interview_type = InterviewType::new(name.clone());
-        let _ = interview_type.add_to_db(&conn);
+        let _ = interview_type.add_to_db(&conn).unwrap();
 
         let result = InterviewType::get_by_id(&conn, 1);
+
+        assert_eq!(result.is_ok(), true);
     }
 
     #[test]

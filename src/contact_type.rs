@@ -1,6 +1,5 @@
-use chrono::prelude::*;
 use chrono::{DateTime, Local};
-use rusqlite::{params, Connection, Error};
+use rusqlite::{params, Connection};
 
 use crate::errors::JobSearchError;
 use crate::utils::convert_option_string_to_option_date;
@@ -13,6 +12,7 @@ pub struct ContactType {
     pub hide: bool,
 }
 
+#[allow(dead_code)]
 impl ContactType {
     fn new(name: String) -> ContactType {
         ContactType {
@@ -164,10 +164,7 @@ impl ContactType {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     use crate::create_in_memory_db;
-
-    use chrono::prelude::*;
 
     #[test]
     fn test_new() {

@@ -1,5 +1,3 @@
-use rusqlite::{params, Connection, Error};
-
 #[derive(Debug)]
 struct AppliedTo {
     id: Option<i32>,

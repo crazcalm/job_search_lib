@@ -2,7 +2,7 @@ use std::fs;
 use std::path;
 
 use rusqlite::config::DbConfig;
-use rusqlite::{params, Connection, Error};
+use rusqlite::{Connection, Error};
 mod company;
 mod contact_type;
 mod errors;
@@ -70,6 +70,7 @@ fn file_exist(path: &str) -> bool {
     result
 }
 
+#[allow(dead_code)]
 fn create_in_memory_db() -> Result<Connection, Error> {
     let conn = Connection::open_in_memory()?;
     let sql_stmts = read_sql_file("");
@@ -101,6 +102,8 @@ pub fn get_db_connection(path: &str) -> Result<Connection, Error> {
 #[cfg(test)]
 mod tests {
     use std::fs;
+
+    use rusqlite::params;
 
     use super::*;
 

@@ -2,6 +2,7 @@ use chrono::prelude::*;
 use chrono::{DateTime, Local};
 use std::fs;
 
+#[allow(dead_code)]
 pub fn convert_option_string_to_option_date(
     string_time: Option<String>,
 ) -> Option<DateTime<Local>> {
@@ -18,7 +19,8 @@ pub fn convert_option_string_to_option_date(
     date_option
 }
 
-pub fn parse_time(date: &str) -> Result<DateTime<Local>, std::num::ParseIntError> {
+#[allow(dead_code)]
+fn parse_time(date: &str) -> Result<DateTime<Local>, std::num::ParseIntError> {
     //"2020-05-14 21:16:39"
 
     let date_time_parts: Vec<&str> = date.split(" ").collect();
@@ -41,6 +43,7 @@ pub fn parse_time(date: &str) -> Result<DateTime<Local>, std::num::ParseIntError
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn file_exist(path: &str) -> bool {
     let metadata = if let Ok(data) = fs::metadata(path) {
         Some(data)

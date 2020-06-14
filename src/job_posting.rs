@@ -1,6 +1,5 @@
-use chrono::prelude::*;
 use chrono::{DateTime, Local};
-use rusqlite::{params, Connection, Error};
+use rusqlite::{params, Connection};
 
 use crate::errors::JobSearchError;
 use crate::utils::convert_option_string_to_option_date;
@@ -16,6 +15,7 @@ pub struct JobPosting {
 }
 
 impl JobPosting {
+    #[allow(dead_code)]
     pub fn new(link: String) -> JobPosting {
         JobPosting {
             id: None,
@@ -27,6 +27,7 @@ impl JobPosting {
         }
     }
 
+    #[allow(dead_code)]
     pub fn new_from_row(row: &rusqlite::Row) -> Result<JobPosting, JobSearchError> {
         let hide = match row.get(5)? {
             0 => false,
@@ -45,6 +46,7 @@ impl JobPosting {
         Ok(job_posting)
     }
 
+    #[allow(dead_code)]
     pub fn get_all_job_postings(conn: &Connection) -> Result<Vec<JobPosting>, JobSearchError> {
         let mut stmt = conn
             .prepare(
@@ -65,6 +67,7 @@ impl JobPosting {
         Ok(job_postings)
     }
 
+    #[allow(dead_code)]
     pub fn add_to_db(&mut self, conn: &Connection) -> Result<(), JobSearchError> {
         //If it has an id, do not add it to the database
         // because it already exists
@@ -95,6 +98,7 @@ impl JobPosting {
         Ok(())
     }
 
+    #[allow(dead_code)]
     fn update_db(&mut self, conn: &Connection) -> Result<(), JobSearchError> {
         let hide = match self.hide {
             true => 1,

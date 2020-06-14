@@ -1,6 +1,5 @@
-use chrono::prelude::*;
 use chrono::{DateTime, Local};
-use rusqlite::{params, Connection, Error, NO_PARAMS};
+use rusqlite::{params, Connection, NO_PARAMS};
 
 use crate::errors::JobSearchError;
 use crate::utils::convert_option_string_to_option_date;
@@ -17,6 +16,7 @@ struct Company {
     hide: bool,
 }
 
+#[allow(dead_code)]
 impl Company {
     fn new(
         name: String,
@@ -54,7 +54,7 @@ impl Company {
             phone,
             created_date,
             last_updated,
-            hide
+            hide,
         }
     }
 
@@ -77,7 +77,7 @@ impl Company {
                 let last_updated = convert_option_string_to_option_date(last_updated);
 
                 Ok(last_updated)
-            }
+            },
         )?;
 
         self.last_updated = row;
@@ -102,7 +102,6 @@ impl Company {
             "SELECT created_date, last_updated FROM companies WHERE id=(?1)",
             params![id],
             |row| {
-
                 let created_date: Option<String> = row.get(0)?;
                 let created_date = convert_option_string_to_option_date(created_date);
 
@@ -110,7 +109,7 @@ impl Company {
                 let last_updated = convert_option_string_to_option_date(last_updated);
 
                 Ok((created_date, last_updated))
-            }
+            },
         )?;
 
         self.id = Some(id);
@@ -120,31 +119,28 @@ impl Company {
         Ok(())
     }
 
+    #[allow(dead_code)]
     fn get_all(conn: &Connection) -> Result<Vec<Company>, JobSearchError> {
         let mut stmt = conn.prepare(
             "SELECT id, name, address, website, phone, created_date, last_updated, hide FROM companies")?;
 
-        let companies_iter = stmt.query_map(
-            NO_PARAMS,
-            |row| {
+        let companies_iter = stmt.query_map(NO_PARAMS, |row| {
+            let hide = match row.get(8)? {
+                0 => true,
+                _ => false,
+            };
 
-                let hide = match row.get(8)? {
-                    0 => true,
-                    _ => false
-                };
-
-                Ok(Company::new_from_db(
-                    row.get(1)?,
-                    row.get(2)?,
-                    row.get(3)?,
-                    row.get(4)?,
-                    row.get(5)?,
-                    row.get(6)?,
-                    row.get(7)?,
-                    hide
-                ))
-            }
-        )?;
+            Ok(Company::new_from_db(
+                row.get(1)?,
+                row.get(2)?,
+                row.get(3)?,
+                row.get(4)?,
+                row.get(5)?,
+                row.get(6)?,
+                row.get(7)?,
+                hide,
+            ))
+        })?;
 
         let mut companies_list = Vec::new();
         for company in companies_iter {
@@ -158,12 +154,10 @@ impl Company {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     use crate::create_in_memory_db;
-    use rusqlite::Connection;
 
     #[test]
-    fn test_update_db(){
+    fn test_update_db() {
         let conn = create_in_memory_db().unwrap();
 
         let name = "testing".to_string();
@@ -192,9 +186,6 @@ mod tests {
         );
 
         let _ = company.add_to_db(&conn).unwrap();
-
-        let created_date = Local::now();
-        let created_date = created_date.format("%Y-%m-%d %H:%M:%S").to_string();
 
         assert_ne!(company.created_date, None);
         assert_eq!(company.last_updated, None);

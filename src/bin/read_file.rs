@@ -1,7 +1,7 @@
 use std::fs::read_to_string;
 use std::path;
 
-use rusqlite::{params, Connection, Result};
+use rusqlite::{Connection, Result};
 
 fn main() -> Result<()> {
     let sql_file_path =
@@ -10,7 +10,7 @@ fn main() -> Result<()> {
         .expect(format!("Unable to find sql file at: {}", &sql_file_path).as_str());
 
     let conn = Connection::open_in_memory().unwrap();
-    conn.execute_batch(&sql_file_string);
+    let _ = conn.execute_batch(&sql_file_string).unwrap();
 
     Ok(())
 }
